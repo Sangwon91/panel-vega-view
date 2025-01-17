@@ -38,42 +38,124 @@ spec = {
 }
 
 
+spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "data": {"url": "https://raw.githubusercontent.com/vega/vega/master/docs/data/movies.json"},
+  "transform": [{
+    "filter": {"and": [
+      {"field": "IMDB Rating", "valid": True},
+      {"field": "Rotten Tomatoes Rating", "valid": True}
+    ]}
+  }],
+  "params": [
+      {
+        "name": "colorDomain",
+        "value": [0, 30],
+      },
+      {
+        "name": "brush",
+        "select": "interval",
+        # "value": {"x": [55, 160], "y": [13, 37]}
+      },
+      {
+          "name": "x_bins",
+          "value": 40,
+      },
+      {
+          "name": "y_bins",
+          "value": 40,
+      },
+      {
+        "name": "point_sel",
+        "select": "point",
+      },
+  ],
+  "mark": {
+      "type": "rect",
+      "width": 5,
+      "height": 5,
+  },
+  # "width": "container",
+  "height": 300,
+  "width": 300,
+  "encoding": {
+    # "size": 5,
+    "x": {
+      "bin": {"maxbins": 40},
+      "field": "IMDB Rating",
+      "type": "quantitative"
+    },
+    "y": {
+      "bin": {"maxbins": 40},
+      "field": "Rotten Tomatoes Rating",
+      "type": "quantitative"
+    },
+    "color": {
+      "condition": {
+        "param": "brush",
+        "aggregate": "count",
+        "type": "quantitative",
+        "scale": {
+            "domain": {"expr": "colorDomain"},
+        }
+      },
+      "value": "grey"
+    }
+  },
+  "config": {
+    "view": {
+      "stroke": "transparent"
+    }
+  }
+}
+
+
 vv = VegaView(
     spec=spec,
     opt={
-        "actions": False,
+        "actions": True,
     },
-    # signal_names=[
-    #     # "point_sel",
-    #     # "brush",
-    #     # "height",
-    #     # "brush_x",
-    #     # "brush_tuple",
-    # ],
+    signal_names=[
+        "point_sel",
+        "brush",
+        "colorDomain",
+        # "height",
+        # "brush_x",
+        # "brush_tuple",
+    ],
 )
 
-print(vv.signals)
+print(vv.param)
 
-json_editor = pn.widgets.JSONEditor(value=vv.signals, width=300)
+json_editor = pn.widgets.JSONEditor(value=vv.param.signals, width=300)
+json_editor.jslink(vv, code={"value": """
+console.log(source.value);
+console.log(target.model_proxy.uuid);
+let vegaView = window.vegaViews[target.model_proxy.uuid];
 
-# code = """
-#     console.log(target.value);
-#     // console.log(source.signals);
-#     // let vegaView = window.vegaViews[source.uuid];
-#     // target.value = JSON.stringify(source.signals);
-# """
-# vv.jslink(json_editor, code={"signals": code})
+Object.entries(source.value).forEach(([key, value]) => {
+  console.log(key, value);
+  if (value != null && value != undefined)
+    vegaView.signal(key, value);
+});
+vegaView.runAsync();
+"""})
+# json_editor2 = pn.widgets.JSONEditor(value=vv.param.data, width=300)
+color_lims = pn.widgets.RangeSlider(name='Color limits', start=0, end=125, value=(0, 40), step=1)
+color_lims.jslink(vv, code={'value': """
+let vegaView = window.vegaViews[target.model_proxy.uuid];
 
-# print(json_editor.value)
+vegaView.signal("colorDomain", source.value);
+vegaView.runAsync();
+"""})
+uuid = pn.widgets.TextInput(value=vv.param.uuid)
 
-def set_v(signals):
-    print('hi')
-    json_editor.value = signals
-
-pn.bind(set_v, signals=vv.param.signals)
-
-pn.Row(
-    vv,
-    json_editor,
-    json_editor.controls(jslink=True),
+pn.Column(
+  pn.Row(
+      vv,
+      json_editor,
+      # json_editor2,
+  ),
+  color_lims,
+  uuid,
 ).servable()

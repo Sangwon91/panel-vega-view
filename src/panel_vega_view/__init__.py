@@ -13,7 +13,7 @@ class VegaView(JSComponent):
     signals = param.Dict({})
     last_signal = param.Dict({})
     signal_names = param.List()
-    
+
     _importmap = {
         "imports": {
             "vega-embed": "https://cdn.jsdelivr.net/npm/vega-embed@6.26.0/+esm",
