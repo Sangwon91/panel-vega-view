@@ -129,8 +129,8 @@ print(vv.param)
 
 json_editor = pn.widgets.JSONEditor(value=vv.param.signals, width=300)
 json_editor.jslink(vv, code={"value": """
-console.log(source.value);
-console.log(target.model_proxy.uuid);
+console.log('JSON', source);
+console.log('JSON', target.model_proxy.uuid);
 let vegaView = window.vegaViews[target.model_proxy.uuid];
 
 Object.entries(source.value).forEach(([key, value]) => {
@@ -143,11 +143,20 @@ vegaView.runAsync();
 # json_editor2 = pn.widgets.JSONEditor(value=vv.param.data, width=300)
 color_lims = pn.widgets.RangeSlider(name='Color limits', start=0, end=125, value=(0, 40), step=1)
 color_lims.jslink(vv, code={'value': """
-let vegaView = window.vegaViews[target.model_proxy.uuid];
-
-vegaView.signal("colorDomain", source.value);
-vegaView.runAsync();
+target.model_proxy.last_signal = {"colorDomain": source.value};
 """})
+vv.jslink(color_lims, code={'last_signal': """
+console.log('Bind', target.value);
+target.value = source.last_signal.colorDomain;                         
+"""})
+
+color_lims2 = pn.widgets.RangeSlider(name='Color limits', start=0, end=125, value=(0, 40), step=1)
+color_lims2.jslink(vv, code={'value': """
+console.log('Color');
+target.model_proxy.last_signal = {"colorDomain": source.value};
+"""})
+
+
 uuid = pn.widgets.TextInput(value=vv.param.uuid)
 
 pn.Column(
@@ -157,5 +166,6 @@ pn.Column(
       # json_editor2,
   ),
   color_lims,
+  color_lims2,
   uuid,
 ).servable()
