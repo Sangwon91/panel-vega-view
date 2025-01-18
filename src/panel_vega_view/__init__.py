@@ -1,6 +1,5 @@
 from uuid import uuid4
 from pathlib import Path
-import panel as pn
 import param
 from panel.custom import JSComponent
 
