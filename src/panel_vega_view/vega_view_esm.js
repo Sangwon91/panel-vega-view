@@ -12,12 +12,15 @@ export function render({ model }) {
   const initializeVega = () => {
     if (this.vegaView) {
       // 종료 기능
+      console.log("finalize");
       this.vegaView.finalize();
+      console.log("delete view");
       delete globalContext.vegaViews[model.uuid];
     }
 
     vegaEmbed(div, model.spec, model.opt).then((result) => {
       this.vegaView = result.view;
+      console.log("view created");
       globalContext.vegaViews[model.uuid] = result.view;
 
       let vegaSignals = this.vegaView.getState().signals;
@@ -48,20 +51,18 @@ export function render({ model }) {
   // 스펙 변경 시 다시 렌더링
   model.on("spec", () => {
     console.log("spec changed");
-    spec = model.spec;
     initializeVega();
-    // render({ model });
   });
 
-  // // 여러 시그널 동시 입력
-  // model.on("update_signals", (newSignals) => {
-  //   Object.entries(newSignals).forEach(([key, value]) => {
-  //     if (this.vegaView.signal(key) !== value) {
-  //       this.vegaView.signal(key, value);
-  //     }
-  //   });
-  //   this.vegaView.runAsync();
-  // });
+  // 여러 시그널 동시 입력
+  model.on("signals", () => {
+    Object.entries(model.signals).forEach(([key, value]) => {
+      if (this.vegaView.signal(key) !== value) {
+        this.vegaView.signal(key, value);
+      }
+    });
+    this.vegaView.runAsync();
+  });
 
   model.on("last_signal", () => {
     let key = Object.keys(model.last_signal)[0];
