@@ -127,19 +127,20 @@ vv = VegaView(
 
 print(vv.param)
 
-json_editor = pn.widgets.JSONEditor(value=vv.param.signals, width=300)
-json_editor.jslink(vv, code={"value": """
-console.log('JSON', source);
-console.log('JSON', target.model_proxy.uuid);
-let vegaView = window.vegaViews[target.model_proxy.uuid];
+json_editor = pn.widgets.JSONEditor(value=vv.spec, width=300)
+json_editor.jslink(vv, code={"value": "target.model_proxy.spec = source.value;"})
+# json_editor.jslink(vv, code={"value": """
+# console.log('JSON', source);
+# console.log('JSON', target.model_proxy.uuid);
+# let vegaView = window.vegaViews[target.model_proxy.uuid];
 
-Object.entries(source.value).forEach(([key, value]) => {
-  console.log(key, value);
-  if (value != null && value != undefined)
-    vegaView.signal(key, value);
-});
-vegaView.runAsync();
-"""})
+# Object.entries(source.value).forEach(([key, value]) => {
+#   console.log(key, value);
+#   if (value != null && value != undefined)
+#     vegaView.signal(key, value);
+# });
+# vegaView.runAsync();
+# """})
 # json_editor2 = pn.widgets.JSONEditor(value=vv.param.data, width=300)
 color_lims = pn.widgets.RangeSlider(name='Color limits', start=0, end=125, value=(0, 40), step=1)
 color_lims.jslink(vv, code={'value': """
