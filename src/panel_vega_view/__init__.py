@@ -24,3 +24,7 @@ class VegaView(JSComponent):
     }
 
     _esm = (Path(__file__).parent / "vega_view_esm.js")
+
+    def _handle_msg(self, data):
+        print('msg', data)
+        self.vega_data = list(data)

@@ -120,8 +120,7 @@ export function render({ model }) {
     }).data
     console.log('vegaData', vegaData);
     // Assign the data to the model.
-    model.vega_data = [...vegaData[model.data_name]];
-    console.log('model.vega_data', model.vega_data);
+    model.send_msg(vegaData[model.data_name]);
   });
 
   return div;
